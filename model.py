@@ -2,61 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence, Callable
+from collections.abc import Callable
 from typing import ClassVar
 from random import Random
 
-from common_types import Color, Direction, BulletType, EnemyType, TowerType, Bullet, Enemy, GridConstruct, Tower
-
-type Coord = tuple[int, int]
-type Graph = list[Node]
-"""
-There are two types of Grids, Ally Grid and Obstacle Grid.
-Ally Grid is a Grid containing either Shooter | Tower | None.
-Members of Ally Grid can be placed anywhere except on enemy path.
-Obstacle Grid is a Grid containing either Tunnels | Buildings | None.
-Members of Obstacle Grid can be placed anywhere.
-"""
-type Grid = list[list[GridConstruct | None]]
+from common_types import Coord, Grid, Graph, Node, Color, Direction, BulletType, EnemyType, TowerType, Bullet, Enemy, GridConstruct, Tower
 
 
-class Node:
-    """
-    Nodes for graph-based traversal.
-    Nodes contain info on what enemy is on it and the other nodes the enemy can go to.
-    Superimposed on Ally Grid.
-    """
-    def __init__(self, x: int, y: int):
-        self._coords: Coord = (x, y)
-        self._occupant: Enemy | None = None
-        self._connections: list[Node] = []
-    
-    @property
-    def coords(self) -> Coord:
-        return self._coords
-    
-    @property
-    def occupant(self) -> Enemy | None:
-        return self._occupant
-    
-    @property
-    def is_occupied(self) -> bool:
-        return self._occupant is not None
-    
-    @property
-    def connections(self) -> Sequence[Node]:
-        return self._connections
-
-    def occupy(self, enemy: Enemy):
-        self._occupant = enemy
-    
-    def vacate(self):
-        self._occupant = None
-    
-    def set_connections(self, *nodes: Node):
-        self._connections.extend(nodes)
-
-class NormalBullets:
+class NormalBullet:
     def __init__(self, color: Color):
         self._color: Color = color
 
@@ -114,11 +67,13 @@ class NormalEnemy:
     def exp(self) -> int:
         return 1
 
-    def move(self, node: Node):
+    def move_to_node(self, node: Node):
         self._curr_node = node
 
     def valid_shot(self, damage: int):
         self._hp = max(0, self._hp-damage)
+
+        self._is_dead = self._hp == 0
     
 class NormalTower:
     def __init__(self, r: int, c: int):
@@ -170,11 +125,19 @@ class Shooter:
 
 
 class ZumaModelPhase1:
-    BULLET_FACTORY: ClassVar[dict[BulletType, Callable[[Color], Bullet]]]
+    BULLET_FACTORY: ClassVar[dict[BulletType, Callable[[Color], Bullet]]
+        ] = {
+            BulletType.NORMAL: NormalBullet,
+        }
 
     ENEMY_FACTORY: ClassVar[dict[EnemyType, Callable[[Color, Node], Enemy]]
         ] = {
             EnemyType.NORMAL: NormalEnemy,
+        }
+
+    TOWER_FACTORY: ClassVar[dict[TowerType, Callable[[int, int], Tower]]
+        ] = {
+            TowerType.NORMAL: NormalTower,
         }
 
     def __init__(self):
@@ -184,14 +147,14 @@ class ZumaModelPhase1:
         self._colors: list[Color] = [Color.GREEN]                                       # possible enemy colors
         self._base_enemy_num: int = 5
         self._enemy_types: list[EnemyType] = [EnemyType.NORMAL]                         # possible enemies encountered
-        self._remaining_Enemy: int = 5                                                # Enemy left to defeat for this round
-        self._active_Enemy: list[Enemy] = []                                        # alive enemies on nodes
+        self._remaining_enemies: int = 5                                                # Enemy left to defeat for this round
+        self._active_enemies: list[Enemy] = []                                          # alive enemies on nodes
         self._enemy_paths: list[Graph] = []                                             # list of enemy paths
         self._shooter: Shooter = Shooter(7//2, 7//2)                                    # for phase 1
-        self._grid_constructs: list[GridConstruct] = []                                # list of tunnels, buildings, shooter, towers. Basically anything that appears on the grid
-        self._Tower: list[Tower] = []                                                 # list of Tower
+        self._grid_constructs: list[GridConstruct] = []                                 # list of tunnels, buildings, shooter, towers. Basically anything that appears on the grid
+        self._towers: list[Tower] = []                                                   # list of Tower
         self._grid_size: tuple[int, int] = (7, 7)                                       # for phase 1, 7x7 grid
-        self._grid: Grid
+        self._grid: Grid = []
         self._rng = Random(67)                                                          # remove 67 for actual gameplay
 
     @property
@@ -208,7 +171,7 @@ class ZumaModelPhase1:
     
     @property
     def is_round_over(self) -> bool:
-        return self._remaining_Enemy == 0
+        return self._remaining_enemies == 0
     
     @property
     def is_game_over(self) -> bool:
@@ -224,6 +187,7 @@ class ZumaModelPhase1:
         self._grid = [[None for _ in range(c)] for _ in range(r)]
 
         self._grid[r//2][c//2] = self._shooter
+        
         # add func to place starting grid constructs
     
     def make_path(self):                                                                # currently for phase 1 only
@@ -238,7 +202,7 @@ class ZumaModelPhase1:
             curr_node = Node(1, c)
             path.insert(0, curr_node)
             if next_node is not None:
-                next_node.set_connections(curr_node)
+                curr_node.set_connections(next_node)
             next_node = curr_node
         
         self._enemy_paths.append(path)
@@ -250,11 +214,7 @@ class ZumaModelPhase1:
         """
         Creates Enemies instances based on random EnemyType.
         """
-        match self._enemy_types[self._rng.randint(0, len(self._enemy_types)-1)]:
-            case EnemyType.NORMAL:
-                return NormalEnemy(self.choose_color(), start_node)
-        
-        raise AssertionError("Unhandled enemy type")
+        return self.ENEMY_FACTORY[self._enemy_types[self._rng.randint(0, len(self._enemy_types)-1)]](self.choose_color(), start_node)
 
     def spawn_enemy(self):
         """
@@ -267,7 +227,7 @@ class ZumaModelPhase1:
 
             if not start_node.is_occupied:
                 enemy = self.create_enemy(start_node)
-                self._active_Enemy.append(enemy)
+                self._active_enemies.append(enemy)
                 start_node.occupy(enemy)
     
     def despawn_enemy(self, enemy: Enemy):                                            # controller checks if round is over and calls update from model if it is
@@ -275,8 +235,9 @@ class ZumaModelPhase1:
         Enemy is removed from list of active enemies.
         Counter for remaining enemies decreases.
         """
-        self._active_Enemy.remove(enemy)
-        self._remaining_Enemy -= 1
+        enemy.curr_node.vacate()
+        self._active_enemies.remove(enemy)
+        self._remaining_enemies -= 1
     
     def move_enemy(self, enemy: Enemy):
         """
@@ -288,19 +249,18 @@ class ZumaModelPhase1:
         lnen = len(next_nodes)
 
         if lnen == 0:                                                                   # curr_node is last node
-            curr_node.vacate()
             self.despawn_enemy(enemy)
             self._lives = max(0, self._lives - 1)
         elif lnen == 1 and not next_nodes[0].is_occupied:                               # no intersection
             curr_node.vacate()
             next_nodes[0].occupy(enemy)
-            enemy.move(next_nodes[0])
+            enemy.move_to_node(next_nodes[0])
         else:                                                                           # with intersection
             for next_node in next_nodes:
                 if not next_node.is_occupied:
                     curr_node.vacate()
                     next_node.occupy(enemy)
-                    enemy.move(next_node)
+                    enemy.move_to_node(next_node)
                     break
     
     def got_shot(self, enemy: Enemy, bullet: Bullet) -> bool:
@@ -313,41 +273,52 @@ class ZumaModelPhase1:
         """
         if enemy.color == bullet.color:                                                 # same color
             enemy.valid_shot(bullet.damage)
+
+            if enemy.is_dead:
+                self.despawn_enemy(enemy)
             #bullet.effects() # not sure where to put effects processing (collision handling will prob be in view) # bullet's effects take place, could be explosion, piercing or lightning chain
             
             return True
         else:                                                                           # bullet passes through
             return False
     
-    def create_tower(self, tower_type: TowerType, r: int, c: int):
-        match tower_type:
-            case TowerType.NORMAL:
-                return NormalTower(r, c)
-        
-        raise AssertionError("Unhandled tower type")
+    def create_tower(self, tower_type: TowerType, r: int, c: int) -> Tower:
+        return self.TOWER_FACTORY[tower_type](r, c)
 
     def place_tower(self, tower_type: TowerType, r: int, c: int):
+        rows, cols = self._grid_size
+
+        if not(0 <= r < rows) or not(0 <= c < cols):                                              # just in case
+            raise IndexError("Out of bounds. Choose again.")
+        elif self._grid[r][c] != None:
+            raise ValueError("Tile occupied. Chose again.")
+        
         tower = self.create_tower(tower_type, r, c)
 
         self._grid_constructs.append(tower)
-        self._Tower.append(tower)
+        self._towers.append(tower)
+        self._grid[r][c] = tower
 
     def create_bullet(self, bullet_type: BulletType) -> Bullet:
-        color = self.choose_color()
+        return self.BULLET_FACTORY[bullet_type](self.choose_color())
 
-        match bullet_type:
-            case BulletType.NORMAL:
-                return NormalBullets(color)
+    def reset_round(self):
+        self._remaining_enemies = self._base_enemy_num                                  # for phase 1
 
-        raise AssertionError("Unhandled bullet type")
+    def start_round(self):
+        self._curr_round += 1
+        self.reset_round()
+        # other round functions like placing towers
 
     def update(self):
         """
-        Called everytime it's time for enemies to move or if round is over.
+        Called everytime it's time for enemies to spawn/move or if round is over.
         """
         if self.is_round_over:
-            self._curr_round += 1
-            # prompt player to place tower, upgrade it or set direction
+            self.start_round()
         else:                                                                           # updates position of all enemies
-            for enemy in reversed(self._active_Enemy[:]): # traversing a copy of active enemies in preparation for multihit. Starting from enemy in lead of line then traversing backwards
+            if self._remaining_enemies > len(self._active_enemies):
+                self.spawn_enemy()
+
+            for enemy in reversed(self._active_enemies[:]): # traversing a copy of active enemies in preparation for multihit. Starting from enemy in lead of line then traversing backwards
                 self.move_enemy(enemy)
