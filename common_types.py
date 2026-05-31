@@ -1,5 +1,6 @@
 # pyright: strict
 
+from __future__ import annotations
 from enum import StrEnum, auto
 from typing import Protocol
 
@@ -145,11 +146,18 @@ class GridConstruct(Protocol):
     def size(self) -> int:
         """
         Size multiplier.
-        Base size is one tile size (15x15).
+        Base size is one tile size (16x16).
         """
         ...
     @property
     def coords(self) -> Coord:
+        ...
+    
+    @property
+    def resources(self) -> tuple[int, int]:
+        """
+        (x, y) coordinates in resources.pyxres
+        """
         ...
 
 class Tower(Protocol):
@@ -165,6 +173,11 @@ class Tower(Protocol):
     @property
     def coords(self) -> Coord:
         ...
+    
+    @property
+    def resources(self) -> tuple[int, int]:
+        ...
+
     @property
     def direction(self) -> Direction:
         ...
