@@ -31,11 +31,12 @@ class ZumaView:
     def draw_grid(self, grid: Grid):
         for i in range(len(grid)):
             for j in range(len(grid[i])):
-                tile = grid[i][j]
-                if tile is not None:
-                    pyxel.blt(j * 16, i * 16, 0, tile.resources[0], tile.resources[1], 16, 16)
-                else:
-                    pyxel.blt(j * 16, i * 16, 0, 0, 16, 16, 16)
+                if not(i == len(grid) // 2 and j == len(grid[i]) // 2):
+                    tile = grid[i][j]
+                    if tile is not None:
+                        pyxel.blt(j * 16, i * 16, 0, tile.resources[0], tile.resources[1], 16, 16)
+                    else:
+                        pyxel.blt(j * 16, i * 16, 0, 0, 16, 16, 16)
     
     def draw_path(self, path: list[Node]):
         for i in path:
