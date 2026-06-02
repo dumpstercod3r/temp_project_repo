@@ -91,14 +91,29 @@ class Bullet(Protocol):
         """
         ...
     @property
+    def coords(self) -> tuple[float, float]:
+        """
+        (x, y) coordinates on screen
+        """
+        ...
+
+    @property
     def color(self) -> Color:
         ...
+
     @property
     def speed(self) -> int:
         """
         Seconds it takes to cross the diagonal length of the screen.
         """
         ...
+    @property
+    def angle(self) -> float:
+        """
+        Angle the bullet is moving towards in radians
+        """
+        ...
+
     @property
     def damage(self) -> int:
         ...

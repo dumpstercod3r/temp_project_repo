@@ -8,6 +8,8 @@ import pyxel
 from model import Grid, Node, Shooter
 from common_types import Bullet, Enemy, Color
 
+from math import sin, cos, atan
+
 class UpdateHandler(Protocol):
     def update(self): ...
 
@@ -45,10 +47,22 @@ class ZumaView:
             pyxel.blt(coords[0] * 16, coords[1]  * 16, 0, 0, 16, 16, 16)
             pyxel.pal()
 
-    def draw_shooter(self, shooter: Shooter):
-        ...
+    def draw_shooter(self, shooter: Shooter, next_bullet_color: Color):
+        shooter_x = shooter.coords[0] * 16
+        shooter_y = shooter.coords[1] * 16
+        center_x = shooter_x + 8
+        center_y = shooter_y + 8
+        bullet_orbit_radius = 24
+        angle = atan((pyxel.mouse_y - center_y) / (pyxel.mouse_x - center_x))
+        bullet_color = self._color_dictionary[next_bullet_color][1]
+
+        pyxel.blt(shooter_x, shooter_y, 0, 0, 0, 16, 16)
+        pyxel.circ(center_x + (bullet_orbit_radius * cos(angle)), center_y + (bullet_orbit_radius * sin(angle)), 5, bullet_color)
     
     def draw_bullet(self, bullet: Bullet):
+        ...
+    
+    def get_shot_info(self) -> tuple[float, float, float]: # (x, y, angle)
         ...
     
     def draw_enemy(self, enemy: Enemy):

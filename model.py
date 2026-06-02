@@ -10,13 +10,19 @@ from common_types import Coord, Grid, Graph, Node, Color, Direction, BulletType,
 
 
 class NormalBullet:
-    def __init__(self, color: Color):
+    def __init__(self, color: Color, x: float, y: float, angle: float):
         self._color: Color = color
+        self._coords = (x, y)
+        self._angle = angle
 
     @property
     def size(self) -> int:
         return 1
     
+    @property
+    def coords(self) -> tuple[float, float]:
+        return self._coords
+
     @property
     def color(self) -> Color:
         return self._color
@@ -24,6 +30,10 @@ class NormalBullet:
     @property
     def speed(self) -> int:
         return 5
+    
+    @property
+    def angle(self) -> float:
+        return self._angle
     
     @property
     def damage(self) -> int:
@@ -93,6 +103,10 @@ class NormalTower:
     @property
     def coords(self) -> Coord:
         return self._coords
+    
+    @property
+    def resources(self) -> tuple[int, int]:
+        ...
 
     @property
     def direction(self) -> Direction:
@@ -122,10 +136,16 @@ class Shooter:
     @property
     def coords(self) -> Coord:
         return self._coords
+    
+    @property
+    def resources(self) -> tuple[int, int]:
+        return (0, 0)
+        
+    
 
 
 class ZumaModelPhase1:
-    BULLET_FACTORY: ClassVar[dict[BulletType, Callable[[Color], Bullet]]
+    BULLET_FACTORY: ClassVar[dict[BulletType, Callable[[Color, float, float, float], Bullet]]
         ] = {
             BulletType.NORMAL: NormalBullet,
         }
@@ -157,6 +177,9 @@ class ZumaModelPhase1:
         self._grid: Grid = []
         self._rng = Random(67)                                                          # remove 67 for actual gameplay
 
+        self._bullet_colors_queue: list[Color] = self._rng.sample(self._colors, k=len(self._colors)) # keeps a queue of currently avaiable colors in random order. refreshes when empty
+        self._active_bullets: list[Bullet] = [] # list of all bullets active
+        
     @property
     def shooter(self) -> Shooter:
         return self._shooter
@@ -209,6 +232,22 @@ class ZumaModelPhase1:
 
     def choose_color(self) -> Color:
         return self._colors[self._rng.randint(0, len(self._colors)-1)]
+    
+    @property
+    def next_bullet_color(self) -> Color:
+        """
+        Returns first item in bullet queue.
+        """
+        return self._bullet_colors_queue[0]
+    
+    def pop_next_bullet_color(self) -> Color:
+        """
+        Pops next bullet. Refreshes queue when empty
+        """
+        if not self._bullet_colors_queue:
+            self._bullet_colors_queue = self._rng.sample(self._colors, k=len(self._colors))
+        return self._bullet_colors_queue.pop(0)
+    
     
     def create_enemy(self, start_node: Node) -> Enemy:
         """
@@ -299,8 +338,11 @@ class ZumaModelPhase1:
         self._towers.append(tower)
         self._grid[r][c] = tower
 
-    def create_bullet(self, bullet_type: BulletType) -> Bullet:
-        return self.BULLET_FACTORY[bullet_type](self.choose_color())
+    def create_bullet(self, bullet_type: BulletType, color: Color, x: float, y: float, angle: float) -> Bullet:
+        return self.BULLET_FACTORY[bullet_type](color, x, y, angle)
+    
+    def move_bullet(self, bullet: Bullet):
+        ...
 
     def reset_round(self):
         self._remaining_enemies = self._base_enemy_num                                  # for phase 1
