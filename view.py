@@ -22,6 +22,7 @@ class ZumaView:
         self._width: int = 112
         self._height: int = 112
         self._tile_size: int = 16
+        self._bullet_orbit_radius = 24
 
         # color dictionary for converting sprite colors
         # from template colors to actual color
@@ -52,21 +53,33 @@ class ZumaView:
         shooter_y = shooter.coords[1] * 16
         center_x = shooter_x + 8
         center_y = shooter_y + 8
-        bullet_orbit_radius = 24
         angle = atan((pyxel.mouse_y - center_y) / (pyxel.mouse_x - center_x))
         bullet_color = self._color_dictionary[next_bullet_color][1]
 
-        pyxel.blt(shooter_x, shooter_y, 0, 0, 0, 16, 16)
-        pyxel.circ(center_x + (bullet_orbit_radius * cos(angle)), center_y + (bullet_orbit_radius * sin(angle)), 5, bullet_color)
+        # draws shooter itself:
+        pyxel.blt(shooter_x, shooter_y, 0, 0, 0, 16, 16, pyxel.COLOR_BLACK)
+
+        # draws bullet pointer:
+        pyxel.circ(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), 5, bullet_color)
     
     def draw_bullet(self, bullet: Bullet):
-        ...
+        pyxel.circ(bullet.coords[0], bullet.coords[1], bullet.size, self._color_dictionary[bullet.color][1])
     
-    def get_shot_info(self) -> tuple[float, float, float]: # (x, y, angle)
-        ...
+    def get_shot_info(self, shooter: Shooter) -> tuple[float, float, float]: # (x, y, angle), returns initial position and angle of a shot bullet
+        shooter_x = shooter.coords[0] * 16
+        shooter_y = shooter.coords[1] * 16
+        center_x = shooter_x + 8
+        center_y = shooter_y + 8
+        self._bullet_orbit_radius = 24
+        angle = atan((pyxel.mouse_y - center_y) / (pyxel.mouse_x - center_x))
+        
+        return (center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), angle)
     
     def draw_enemy(self, enemy: Enemy):
-        ...
+        pyxel.pal(pyxel.COLOR_DARK_BLUE, self._color_dictionary[enemy.color][0])
+        pyxel.pal(pyxel.COLOR_WHITE, self._color_dictionary[enemy.color][1])
+        pyxel.blt(enemy.curr_node.coords[0] * 16, enemy.curr_node.coords[1] * 16, 0, 0, 32, 16, 16, pyxel.COLOR_BLACK)
+        pyxel.pal()
 
     def start_game(self, update_handler: UpdateHandler, draw_handler: DrawHandler):
         pyxel.init(self._width, self._height, fps=30)
