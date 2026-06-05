@@ -19,8 +19,8 @@ class DrawHandler(Protocol):
 
 class ZumaView:
     def __init__(self):
-        self._width: int = 112
-        self._height: int = 112
+        self._width: int = 240
+        self._height: int = 240
         self._tile_size: int = 16
         self._bullet_orbit_radius = 24
 
