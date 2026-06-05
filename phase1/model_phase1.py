@@ -69,8 +69,10 @@ class ZumaModelPhase1:
     
     def update(self):
         if not self.is_game_over:
-            self._enemy_manager.update() # I dunno how to do time shit
-            self._bullet_manager.update()
+            self._enemy_manager.update() # Each enemy moves every 2 seconds
+            self._bullet_manager.update() # Each bullet moves every frame?
+        else:
+            self.end_round()
     
     def end_round(self):
-        ...
+        ... # pagawa na lng plez
