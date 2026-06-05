@@ -107,4 +107,3 @@ class ZumaViewPhase1:
             self._current_fps = int(self._frame_count / elapsed_time)
             self._frame_count = 0
             self._start_time = time.time()
-            print(self._current_fps)
