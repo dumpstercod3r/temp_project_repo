@@ -117,6 +117,10 @@ class Bullet(Protocol):
     @property
     def damage(self) -> int:
         ...
+    
+    def move_bullet_to(self, x: float, y: float):
+        ...
+
     def effects(self):
         ...
     

@@ -8,6 +8,7 @@ from random import Random
 
 from common_types import Coord, Grid, Graph, Node, Color, Direction, BulletType, EnemyType, TowerType, Bullet, Enemy, GridConstruct, Tower
 
+from math import sin, cos, sqrt
 
 class NormalBullet:
     def __init__(self, color: Color, x: float, y: float, angle: float):
@@ -38,6 +39,9 @@ class NormalBullet:
     @property
     def damage(self) -> int:
         return 1
+    
+    def move_bullet_to(self, x: float, y: float):
+        self._coords = (x, y)
 
     def effects(self):
         pass
@@ -341,9 +345,13 @@ class ZumaModelPhase1:
     def create_bullet(self, bullet_type: BulletType, color: Color, x: float, y: float, angle: float) -> Bullet:
         return self.BULLET_FACTORY[bullet_type](color, x, y, angle)
     
-    def move_bullet(self, bullet: Bullet):
-        ...
-
+    def move_bullet(self, bullet: Bullet, screen_width: int, screen_height: int):
+        diagonal_length = sqrt((screen_width ** 2) + (screen_height ** 2))
+        change = diagonal_length / bullet.speed
+        new_x = bullet.coords[0] + (change * cos(bullet.angle))
+        new_y = bullet.coords[1] + (change * sin(bullet.angle))
+        bullet.move_bullet_to(new_x, new_y)
+        
     def reset_round(self):
         self._remaining_enemies = self._base_enemy_num                                  # for phase 1
 
