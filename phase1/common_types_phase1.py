@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TypedDict, Protocol
-from enum import StrEnum, auto
+from enum import StrEnum #, auto
 
 
 type Coord = tuple[int, int]
@@ -19,13 +19,13 @@ class Phase1Info(TypedDict):
 
 
 class Color(StrEnum):
-    GREEN = auto()
+    GREEN = 'GREEN'
 
 class BulletType(StrEnum):
-    NORMAL = auto()
+    NORMAL = 'NORMAL'
 
 class EnemyType(StrEnum):
-    NORMAL = auto()
+    NORMAL = 'NORMAL'
 
 class Node:
     def __init__(self, x: int, y: int):

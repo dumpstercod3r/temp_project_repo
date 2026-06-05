@@ -17,7 +17,7 @@ class NormalBullet:
         self._angle = angle
     @property
     def size(self) -> int:
-        return 1    
+        return 5
     @property
     def coords(self) -> tuple[float, float]:
         return self._coords
@@ -32,7 +32,7 @@ class NormalBullet:
         return self._angle    
     @property
     def damage(self) -> int:
-        return 1    
+        return 1
     def move_bullet_to(self, x: float, y: float):
         self._coords = (x, y)
     def effects(self):
@@ -98,8 +98,8 @@ class Shooter:
 
 class MapManager:
     def __init__(self, enemy_paths: list[list[list[int]]]):
-        self._shooter: Shooter = Shooter(6, 6)
-        self._grid_size: Coord = (13, 13)
+        self._shooter: Shooter = Shooter(7, 7)
+        self._grid_size: Coord = (15, 15)
         self._grid: list[list[Shooter | None]] = []
         self._raw_enemy_paths: list[list[list[int]]] = enemy_paths
         self._enemy_paths: list[Graph] = []
@@ -208,7 +208,6 @@ class EnemyManager:
                     next_node.occupy(enemy)
                     enemy.move_to_node(next_node)
                     break
-        
         return False
     
     def got_shot(self, enemy: Enemy, bullet: Bullet) -> bool:
@@ -223,7 +222,12 @@ class EnemyManager:
     def update(self) -> int:
         # each enemy moves after 2 seconds
         # if an self.move returns True, add to lose a life counter and return total amount lost
-        ...
+        total_dmg = 0
+        for i in self._active_enemies:
+            if self.move(i):
+                total_dmg += 1
+        return total_dmg
+
     
     def prepare_round(self):
         self._active_enemies = []
@@ -252,9 +256,9 @@ class BulletManager:
         self._active_bullets.append(bullet)
         return bullet
     
-    def move_bullet(self, bullet: Bullet):
+    def move_bullet(self, bullet: Bullet, current_fps: int):
         diagonal_length = sqrt((self._screen_width ** 2) + (self._screen_height ** 2))
-        change = diagonal_length / bullet.speed
+        change = diagonal_length / (bullet.speed * current_fps)
         new_x = bullet.coords[0] + (change * cos(bullet.angle))
         new_y = bullet.coords[1] + (change * sin(bullet.angle))
         bullet.move_bullet_to(new_x, new_y)
@@ -268,7 +272,11 @@ class BulletManager:
         if not(0 <= x < self._screen_width) or not(0 <= y < self._screen_height):
             self.despawn_bullet(bullet)
     
-    def update(self):
+    def update(self, bullet_color: Color, click_info: tuple[float, float, float] | None, current_fps: int):
+        if click_info is not None:
+            self.create_bullet(BulletType.NORMAL, bullet_color, *click_info)
+        for i in self._active_bullets:
+            self.screen_edge_collision(i)
+            self.move_bullet(i, current_fps)
         # each bullet moves every time this is called
         # checks if each bullet hits the edge of screen.
-        ...

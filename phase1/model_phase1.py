@@ -42,6 +42,8 @@ class ZumaModelPhase1:
     
     @property
     def next_bullet_color(self) -> Color:
+        if not self._bullet_colors_queue:
+            self._bullet_colors_queue = self._rng.sample(self._colors, k=len(self._colors))
         return self._bullet_colors_queue[0]
 
     @property
@@ -74,17 +76,23 @@ class ZumaModelPhase1:
         self._enemy_manager.prepare_round()
     
     def check_for_collisions(self):
+        def is_colliding(bullet: Bullet, enemy: Enemy):
+            if ((enemy.coords[0] * 16) - 8 <= bullet.coords[0] <= (enemy.coords[0] * 16) + 8 and 
+            (enemy.coords[1] * 16) - 8 <= bullet.coords[1] <= (enemy.coords[1] * 16) + 8):
+                return True
+            else:
+                return False
         for bullet in self.active_bullets:
             for enemy in self.active_enemies:
-                if bullet.coords == enemy.coords:
+                if is_colliding(bullet, enemy):
                     self.got_hit(enemy, bullet)
 
     def check_if_game_over(self) -> bool:
         return self._enemy_manager.all_enemies_defeated | self._lives == 0
 
-    def update(self):
+    def update(self, click_info: tuple[float, float, float] | None, current_fps: int):
         if not self.is_game_over:
-            self._bullet_manager.update()
+            self._bullet_manager.update(self.pop_next_bullet_color(), click_info, current_fps)
             self.lives_manager(self._enemy_manager.update())
             self.check_for_collisions()
             self.check_if_game_over()
