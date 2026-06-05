@@ -20,6 +20,8 @@ class Phase1Info(TypedDict):
 
 class Color(StrEnum):
     GREEN = 'GREEN'
+    BLUE = 'BLUE'
+    YELLOW = 'YELLOW'
 
 class BulletType(StrEnum):
     NORMAL = 'NORMAL'

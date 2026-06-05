@@ -6,7 +6,7 @@
         "NORMAL"
     ],
     "colors": [
-        "GREEN"
+        "GREEN", "BLUE", "YELLOW"
     ],
     "enemy_paths": [
         [

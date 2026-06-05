@@ -274,13 +274,15 @@ class BulletManager:
         if not(0 <= x < self._screen_width) or not(0 <= y < self._screen_height):
             self.despawn_bullet(bullet)
     
-    def update(self, bullet_color: Color, fire_rate: float, click_info: tuple[float, float, float] | None, delta_time: float):
+    def update(self, bullet_color: Color, fire_rate: float, click_info: tuple[float, float, float] | None, delta_time: float) -> bool:
         if click_info is not None and self._elapsed_time_since_last_bullet >= 1 / fire_rate:
             self.create_bullet(BulletType.NORMAL, bullet_color, *click_info)
             self._elapsed_time_since_last_bullet = 0
+            return True
         for i in self._active_bullets:
             self.screen_edge_collision(i)
             self.move_bullet(i, delta_time)
         self._elapsed_time_since_last_bullet += delta_time
+        return False
         # each bullet moves every time this is called
         # checks if each bullet hits the edge of screen.

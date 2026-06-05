@@ -31,7 +31,9 @@ class ZumaViewPhase1:
         # from template colors to actual color
         # {Color : (Dark Color, Light Color)}
         self._color_dictionary: dict[Color, tuple[int, int]] = {
-            Color.GREEN: (pyxel.COLOR_GREEN, pyxel.COLOR_LIME)
+            Color.GREEN: (pyxel.COLOR_GREEN, pyxel.COLOR_LIME),
+            Color.BLUE: (pyxel.COLOR_DARK_BLUE, pyxel.COLOR_LIGHT_BLUE),
+            Color.YELLOW: (pyxel.COLOR_ORANGE, pyxel.COLOR_YELLOW),
         }
     
     @property

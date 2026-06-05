@@ -92,7 +92,9 @@ class ZumaModelPhase1:
 
     def update(self, click_info: tuple[float, float, float] | None, delta_time: float):
         if not self.is_game_over:
-            self._bullet_manager.update(self.pop_next_bullet_color(), self.shooter.fire_rate, click_info, delta_time)
+            shot = self._bullet_manager.update(self.next_bullet_color, self.shooter.fire_rate, click_info, delta_time)
+            if shot:
+                self.pop_next_bullet_color()
             self.lives_manager(self._enemy_manager.update())
             self.check_for_collisions()
             self.check_if_game_over()
