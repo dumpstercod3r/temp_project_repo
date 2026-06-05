@@ -151,15 +151,16 @@ class EnemyManager:
             EnemyType.NORMAL: NormalEnemy,
         }
     
-    def __init__(self, enemy_count: int, enemy_types: list[str], colors: list[Color]):
+    def __init__(self, enemy_count: int, enemy_types: list[str], colors: list[Color], rng: Random):
         self._enemy_count: int = enemy_count
+        self._enemy_count_needed_to_spawn: int = self._enemy_count
         self._enemy_types: list[EnemyType] = [EnemyType(enemy) for enemy in enemy_types]
         self._active_enemies: list[Enemy] = []
         self._enemies_defeated: int = 0
         self._enemy_colors: list[Color] = colors
         self._all_enemies_defeated: bool = False
-        self._rng: Random = Random(67)
-    
+        self._rng: Random = rng
+        self._elapsed_time_since_last_enemy_move: float = 0
     @property
     def active_enemies(self) -> list[Enemy]:
         return self._active_enemies
@@ -179,7 +180,8 @@ class EnemyManager:
         for path in enemy_paths:
             start_node = path[0]
 
-            if not start_node.is_occupied:
+            if self._enemy_count_needed_to_spawn > 0:
+                    self._enemy_count_needed_to_spawn -= 1
                     enemy = self.create_enemy(start_node)
                     self._active_enemies.append(enemy)
                     start_node.occupy(enemy)
@@ -219,13 +221,16 @@ class EnemyManager:
         else:
             return False
     
-    def update(self) -> int:
+    def update(self, delta_time: float) -> int:
         # each enemy moves after 2 seconds
         # if an self.move returns True, add to lose a life counter and return total amount lost
         total_dmg = 0
-        for i in self._active_enemies:
-            if self.move(i):
-                total_dmg += 1
+        if self._elapsed_time_since_last_enemy_move >= 2.0:
+            for i in self._active_enemies:
+                if self.move(i):
+                    total_dmg += 1
+            self._elapsed_time_since_last_enemy_move = 0
+        self._elapsed_time_since_last_enemy_move += delta_time
         return total_dmg
 
     
@@ -247,7 +252,7 @@ class BulletManager:
         self._screen_height: int = height
         self._screen_width: int = width
 
-        self._elapsed_time_since_last_bullet = 0
+        self._elapsed_time_since_last_bullet: float = 0
 
     @property
     def active_bullets(self) -> list[Bullet]:

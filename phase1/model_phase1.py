@@ -8,14 +8,14 @@ from phase1.managers_phase1 import *
 
 class ZumaModelPhase1:
     def __init__(self, phase1_info: Phase1Info):
+        self._rng: Random = Random(67)
         self._lives: int = phase1_info['lives']
         self._rounds: int = phase1_info['rounds']
         self._curr_round: int = 0
         self._colors: list[Color] = [Color(color) for color in phase1_info['colors']]
         self._map_manager: MapManager = MapManager(phase1_info['enemy_paths'])
-        self._enemy_manager: EnemyManager = EnemyManager(phase1_info['enemy_count'], phase1_info['enemy_types'], self._colors)
+        self._enemy_manager: EnemyManager = EnemyManager(phase1_info['enemy_count'], phase1_info['enemy_types'], self._colors, self._rng)
         self._bullet_manager: BulletManager = BulletManager(self._colors, 240, 240)
-        self._rng: Random = Random(67)
         self._bullet_colors_queue: list[Color] = self._rng.sample(self._colors, k=len(self._colors))
         self._is_game_over: bool = False
         self._exp: int = 0
@@ -88,16 +88,17 @@ class ZumaModelPhase1:
                     self.got_hit(enemy, bullet)
 
     def check_if_game_over(self) -> bool:
-        return self._enemy_manager.all_enemies_defeated | self._lives == 0
+        return self._enemy_manager.all_enemies_defeated or self._lives == 0 or len(self._enemy_manager.active_enemies) <= 0
 
     def update(self, click_info: tuple[float, float, float] | None, delta_time: float):
         if not self.is_game_over:
             shot = self._bullet_manager.update(self.next_bullet_color, self.shooter.fire_rate, click_info, delta_time)
             if shot:
                 self.pop_next_bullet_color()
-            self.lives_manager(self._enemy_manager.update())
+            self.lives_manager(self._enemy_manager.update(delta_time))
             self.check_for_collisions()
-            self.check_if_game_over()
+            self._enemy_manager.spawn(self.enemy_paths)
+            self._is_game_over = self.check_if_game_over()
         else:
             self.end_round()
     

@@ -19,7 +19,6 @@ class ZumaControllerPhase1:
         if not self._model.is_game_over:
             click_info = self._view.get_shot_info(self._model.shooter)
             self._model.update(click_info, self._view.delta_time)
-            # print(self._view.current_fps)
     
     def draw(self):
         self._view.reset_screen()
