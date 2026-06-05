@@ -211,6 +211,9 @@ class EnemyManager:
         else:
             return False
     
+    def update(self):
+        ...
+    
     def prepare_round(self):
         self._active_enemies = []
         self._enemies_defeated = 0
@@ -244,3 +247,6 @@ class BulletManager:
     
     def despawn_bullet(self, bullet: Bullet):
         self._active_bullets.remove(bullet)
+    
+    def update(self):
+        ...
