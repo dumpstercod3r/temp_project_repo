@@ -14,10 +14,11 @@ class ZumaModelPhase1:
         self._colors: list[Color] = [Color(color) for color in phase1_info['colors']]
         self._map_manager: MapManager = MapManager(phase1_info['enemy_paths'])
         self._enemy_manager: EnemyManager = EnemyManager(phase1_info['enemy_count'], phase1_info['enemy_types'], self._colors)
-        self._bullet_manager: BulletManager = BulletManager(self._colors)
+        self._bullet_manager: BulletManager = BulletManager(self._colors, 240, 240)
         self._rng: Random = Random(67)
         self._bullet_colors_queue: list[Color] = self._rng.sample(self._colors, k=len(self._colors))
         self._is_game_over: bool = False
+        self._exp: int = 0
     
     @property
     def shooter(self) -> Shooter:
@@ -46,6 +47,10 @@ class ZumaModelPhase1:
     @property
     def is_game_over(self) -> bool:
         return self._is_game_over
+
+    @property
+    def exp(self) -> int:
+        return self._exp
     
     def shoot(self, x: int, y: int, angle: int):
         self._bullet_manager.create_bullet(self.shooter.bullet_type, self.pop_next_bullet_color(), x, y, angle)
@@ -59,20 +64,32 @@ class ZumaModelPhase1:
         despawn_bullet = self._enemy_manager.got_shot(enemy, bullet)
         if despawn_bullet:
             self._bullet_manager.despawn_bullet(bullet)
+            self._exp += enemy.exp
 
-    def lose_life(self):
-        self._lives -= 1
+    def lives_manager(self, lost_life: int):
+        self._lives = max(0, self._lives-lost_life)
 
     def prepare_round(self):
         self._map_manager.prepare_round()
         self._enemy_manager.prepare_round()
     
+    def check_for_collisions(self):
+        for bullet in self.active_bullets:
+            for enemy in self.active_enemies:
+                if bullet.coords == enemy.coords:
+                    self.got_hit(enemy, bullet)
+
+    def check_if_game_over(self) -> bool:
+        return self._enemy_manager.all_enemies_defeated | self._lives == 0
+
     def update(self):
         if not self.is_game_over:
-            self._enemy_manager.update() # Each enemy moves every 2 seconds
-            self._bullet_manager.update() # Each bullet moves every frame?
+            self._bullet_manager.update()
+            self.lives_manager(self._enemy_manager.update())
+            self.check_for_collisions()
+            self.check_if_game_over()
         else:
             self.end_round()
     
-    def end_round(self):
-        ... # pagawa na lng plez
+    def end_round(self) -> bool:
+        return self._enemy_manager.all_enemies_defeated

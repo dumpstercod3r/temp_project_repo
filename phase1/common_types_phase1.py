@@ -96,6 +96,9 @@ class Enemy(Protocol):
     def curr_node(self) -> Node:
         ...
     @property
+    def coords(self) -> Coord:
+        ...
+    @property
     def exp(self) -> int:
         ...
     def move_to_node(self, node: Node):

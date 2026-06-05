@@ -61,7 +61,10 @@ class NormalEnemy:
         return self._is_dead   
     @property
     def curr_node(self) -> Node:
-        return self._curr_node    
+        return self._curr_node
+    @property
+    def coords(self) -> Coord:
+        return self._curr_node.coords
     @property
     def exp(self) -> int:
         return 1
@@ -154,11 +157,17 @@ class EnemyManager:
         self._active_enemies: list[Enemy] = []
         self._enemies_defeated: int = 0
         self._enemy_colors: list[Color] = colors
+        self._all_enemies_defeated: bool = False
         self._rng: Random = Random(67)
     
     @property
     def active_enemies(self) -> list[Enemy]:
         return self._active_enemies
+    
+    @property
+    def all_enemies_defeated(self) -> bool:
+        self._all_enemies_defeated = self._enemy_count == self._enemies_defeated
+        return self._all_enemies_defeated
     
     def choose_color(self) -> Color:
         return self._enemy_colors[self._rng.randint(0, len(self._enemy_colors)-1)]
@@ -211,12 +220,15 @@ class EnemyManager:
         else:
             return False
     
-    def update(self):
+    def update(self) -> int:
+        # each enemy moves after 2 seconds
+        # if an self.move returns True, add to lose a life counter and return total amount lost
         ...
     
     def prepare_round(self):
         self._active_enemies = []
         self._enemies_defeated = 0
+        self._all_enemies_defeated = False
 
 
 class BulletManager:
@@ -225,9 +237,11 @@ class BulletManager:
             BulletType.NORMAL: NormalBullet,
         }
 
-    def __init__(self, colors: list[Color]):
+    def __init__(self, colors: list[Color], height: int, width: int):
         self._colors: list[Color] = colors
         self._active_bullets: list[Bullet] = []
+        self._screen_height: int = height
+        self._screen_width: int = width
 
     @property
     def active_bullets(self) -> list[Bullet]:
@@ -238,8 +252,8 @@ class BulletManager:
         self._active_bullets.append(bullet)
         return bullet
     
-    def move_bullet(self, bullet: Bullet, screen_width: int, screen_height: int):
-        diagonal_length = sqrt((screen_width ** 2) + (screen_height ** 2))
+    def move_bullet(self, bullet: Bullet):
+        diagonal_length = sqrt((self._screen_width ** 2) + (self._screen_height ** 2))
         change = diagonal_length / bullet.speed
         new_x = bullet.coords[0] + (change * cos(bullet.angle))
         new_y = bullet.coords[1] + (change * sin(bullet.angle))
@@ -248,5 +262,13 @@ class BulletManager:
     def despawn_bullet(self, bullet: Bullet):
         self._active_bullets.remove(bullet)
     
+    def screen_edge_collision(self, bullet: Bullet):
+        x, y = bullet.coords
+
+        if not(0 <= x < self._screen_width) or not(0 <= y < self._screen_height):
+            self.despawn_bullet(bullet)
+    
     def update(self):
+        # each bullet moves every time this is called
+        # checks if each bullet hits the edge of screen.
         ...
