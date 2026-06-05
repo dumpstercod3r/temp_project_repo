@@ -75,7 +75,7 @@ class ZumaViewPhase1:
         pyxel.circ(bullet.coords[0], bullet.coords[1], bullet.size, self._color_dictionary[bullet.color][1])
     
     def get_shot_info(self, shooter: Shooter) -> tuple[float, float, float] | None: # (x, y, angle), returns initial position and angle of a shot bullet
-        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+        if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
             shooter_x = shooter.coords[0] * 16
             shooter_y = shooter.coords[1] * 16
             center_x = shooter_x + 8
