@@ -90,9 +90,9 @@ class ZumaModelPhase1:
     def check_if_game_over(self) -> bool:
         return self._enemy_manager.all_enemies_defeated | self._lives == 0
 
-    def update(self, click_info: tuple[float, float, float] | None, current_fps: int):
+    def update(self, click_info: tuple[float, float, float] | None, delta_time: float):
         if not self.is_game_over:
-            self._bullet_manager.update(self.pop_next_bullet_color(), click_info, current_fps)
+            self._bullet_manager.update(self.pop_next_bullet_color(), click_info, delta_time)
             self.lives_manager(self._enemy_manager.update())
             self.check_for_collisions()
             self.check_if_game_over()

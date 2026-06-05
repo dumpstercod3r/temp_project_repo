@@ -19,15 +19,13 @@ class DrawHandler(Protocol):
 type Grid = list[list[Shooter | None]]
 
 class ZumaViewPhase1:
-    def __init__(self, fps: int):
+    def __init__(self):
         self._width: int = 240
         self._height: int = 240
         self._tile_size: int = 16
         self._bullet_orbit_radius = 12
-        self._fps = fps
         self._start_time = time.time()
-        self._frame_count = 0
-        self._current_fps = self._fps
+        self._delta_time = 0
 
         # color dictionary for converting sprite colors
         # from template colors to actual color
@@ -37,8 +35,8 @@ class ZumaViewPhase1:
         }
     
     @property
-    def current_fps(self) -> int:
-        return self._current_fps
+    def delta_time(self) -> float:
+        return self._delta_time
     
     def draw_grid(self, grid: Grid):
         for i in range(len(grid)):
@@ -92,18 +90,14 @@ class ZumaViewPhase1:
         pyxel.pal()
 
     def start_game(self, update_handler: UpdateHandler, draw_handler: DrawHandler):
-        pyxel.init(self._width, self._height, fps=self._fps)
+        pyxel.init(self._width, self._height, fps=30)
         pyxel.load("../resources.pyxres")
         pyxel.run(update_handler.update, draw_handler.draw)
     
     def reset_screen(self):
         pyxel.cls(pyxel.COLOR_BLACK)
 
-        # calculates current fps
-        self._frame_count += 1
-        elapsed_time = time.time() - self._start_time
-        
-        if elapsed_time >= 1.0:
-            self._current_fps = int(self._frame_count / elapsed_time)
-            self._frame_count = 0
-            self._start_time = time.time()
+        # calculates delta time
+        current_time = time.time()
+        self._delta_time = current_time - self._start_time
+        self._start_time = current_time

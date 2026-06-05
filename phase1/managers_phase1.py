@@ -256,9 +256,9 @@ class BulletManager:
         self._active_bullets.append(bullet)
         return bullet
     
-    def move_bullet(self, bullet: Bullet, current_fps: int):
+    def move_bullet(self, bullet: Bullet, delta_time: float):
         diagonal_length = sqrt((self._screen_width ** 2) + (self._screen_height ** 2))
-        change = diagonal_length / (bullet.speed * current_fps)
+        change = (diagonal_length / bullet.speed) * delta_time
         new_x = bullet.coords[0] + (change * cos(bullet.angle))
         new_y = bullet.coords[1] + (change * sin(bullet.angle))
         bullet.move_bullet_to(new_x, new_y)
@@ -272,11 +272,11 @@ class BulletManager:
         if not(0 <= x < self._screen_width) or not(0 <= y < self._screen_height):
             self.despawn_bullet(bullet)
     
-    def update(self, bullet_color: Color, click_info: tuple[float, float, float] | None, current_fps: int):
+    def update(self, bullet_color: Color, click_info: tuple[float, float, float] | None, delta_time: float):
         if click_info is not None:
             self.create_bullet(BulletType.NORMAL, bullet_color, *click_info)
         for i in self._active_bullets:
             self.screen_edge_collision(i)
-            self.move_bullet(i, current_fps)
+            self.move_bullet(i, delta_time)
         # each bullet moves every time this is called
         # checks if each bullet hits the edge of screen.
