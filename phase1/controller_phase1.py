@@ -31,3 +31,5 @@ class ZumaControllerPhase1:
             self._view.draw_enemy(i)
         for i in self._model.active_bullets:
             self._view.draw_bullet(i)
+        
+        self._view.draw_mouse()

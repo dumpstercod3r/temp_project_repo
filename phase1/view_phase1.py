@@ -84,10 +84,13 @@ class ZumaViewPhase1:
             return (center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), angle)
     
     def draw_enemy(self, enemy: Enemy):
-        pyxel.pal(pyxel.COLOR_DARK_BLUE, self._color_dictionary[enemy.color][0])
+        pyxel.pal(pyxel.COLOR_NAVY, self._color_dictionary[enemy.color][0])
         pyxel.pal(pyxel.COLOR_WHITE, self._color_dictionary[enemy.color][1])
         pyxel.blt(enemy.curr_node.coords[0] * 16, enemy.curr_node.coords[1] * 16, 0, 0, 32, 16, 16, pyxel.COLOR_BLACK)
         pyxel.pal()
+    
+    def draw_mouse(self):
+        pyxel.circ(pyxel.mouse_x, pyxel.mouse_y, 2, pyxel.COLOR_NAVY)
 
     def start_game(self, update_handler: UpdateHandler, draw_handler: DrawHandler):
         pyxel.init(self._width, self._height, fps=30)
