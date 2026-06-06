@@ -119,6 +119,9 @@ class GridConstruct(Protocol):
     def coords(self) -> Coord:
         ...
     @property
+    def overlay_enemy(self) -> bool:
+        ...
+    @property
     def resources(self) -> tuple[int, int]:
         ...
 
@@ -128,6 +131,9 @@ class Tower(Protocol):
         ...
     @property
     def coords(self) -> Coord:
+        ...
+    @property
+    def overlay_enemy(self) -> bool:
         ...
     @property
     def bullet_type(self) -> BulletType:
