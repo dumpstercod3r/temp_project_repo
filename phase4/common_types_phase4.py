@@ -122,6 +122,9 @@ class GridConstruct(Protocol):
     def coords(self) -> Coord:
         ...
     @property
+    def overlay(self) -> bool:
+        ...
+    @property
     def resources(self) -> tuple[int, int]:
         ...
 
