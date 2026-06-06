@@ -101,9 +101,6 @@ class Enemy(Protocol):
     def should_use_mechanic(self) -> bool:
         ...
     @property
-    def appearance_rate(self) -> float:
-        ...
-    @property
     def enemy_type(self) -> EnemyType:
         ...
     def move_to_node(self, node: Node):

@@ -31,11 +31,7 @@
                 "REGENERATOR": 3,
                 "CHAMELEON": 5
             },
-            "enemy_appearance_rate": {
-                "NORMAL": 0.8,
-                "REGENERATOR": 0.1,
-                "CHAMELEON": 0.1
-            },
+            "enemy_appearance_rate": [0.8, 0.1, 0.1],
             "enemy_paths": [
                 [
                     [3, 0],
