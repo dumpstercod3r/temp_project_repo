@@ -72,12 +72,13 @@ class ZumaModel:
         return self._gamestate
     
     def prepare_round(self):
-        print(self.curr_round)
+        # print(self.curr_round)
         if self.curr_round >= 0:
             self._round_manager.prepare_round(self._rounds[str(self.curr_round+1)], self._exp, self._colors_str)
         self._gamestate = GameState.PLAYING
     
     def exp_manager(self, exp_gained: int):
+        print(self._exp)
         self._exp += exp_gained
     
     def lives_manager(self, lost_life: int):
@@ -105,9 +106,9 @@ class ZumaModel:
     def end_game(self):
         ...
 
-    def update(self, click_info: tuple[float, float, float] | None, delta_time: float):
+    def update(self, click_info: tuple[float, float, float] | None, key_info: Direction | Literal["T"] | None, delta_time: float):
         if self.gamestate == GameState.PLAYING:
-            exp_gained, lives_lost = self._round_manager.update(click_info, delta_time)
+            exp_gained, lives_lost = self._round_manager.update(click_info, key_info, delta_time)
             self.exp_manager(exp_gained)
             self.lives_manager(lives_lost)
             self.update_gamestate()

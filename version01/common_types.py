@@ -59,6 +59,7 @@ class Color(StrEnum):
     YELLOW = "YELLOW"
     RED = "RED"
     PURPLE = "PURPLE"
+    ORANGE = "ORANGE"
 
 class Direction(StrEnum):
     UP = 'UP'

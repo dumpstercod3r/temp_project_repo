@@ -93,7 +93,8 @@ class RoundManager:
                 return enemy.exp
         return 0
       
-    def bullet_enemy_collision(self):
+    def bullet_enemy_collision(self) -> int:
+        exp = 0
         def is_colliding(bullet: Bullet, enemy: Enemy):
             buffer = 3
             if ((enemy.coords[0] * 16) - buffer <= bullet.coords[0] <= (enemy.coords[0] * 16) + buffer + 16 and 
@@ -107,13 +108,15 @@ class RoundManager:
                 tile = self.grid[i][j]
                 if is_colliding(bullet, enemy):
                     if tile is None or not tile.overlay:
-                        self.hit_enemy(enemy, bullet)
+                        exp += self.hit_enemy(enemy, bullet)
+    
+        return exp
     
     def update_roundstate(self):
         if self._round_state == RoundState.PLAYING and self._enemy_manager.all_enemies_dead:
             self._round_state = RoundState.ROUND_OVER
 
-    def update(self, click_info: tuple[float, float, float] | None, delta_time: float) -> tuple[int, int]:
+    def update(self, click_info: tuple[float, float, float] | None, key_info: Direction | Literal["T"] | None, delta_time: float) -> tuple[int, int]:
         # returns exp earned and lives lost
         exp_earned: int = 0
         lives_lost: int = 0
@@ -123,8 +126,8 @@ class RoundManager:
             if shot:
                 self.pop_next_bullet_color()
             lives_lost = self._enemy_manager.update(delta_time)
-            self._tower_manager.update()
-            self.bullet_enemy_collision()
+            self._tower_manager.update(key_info)
+            exp_earned = self.bullet_enemy_collision()
             self._enemy_manager.spawn(self.enemy_paths)
             self.update_roundstate()
         

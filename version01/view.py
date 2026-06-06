@@ -34,7 +34,10 @@ class ZumaView:
         self._color_dictionary: dict[Color, tuple[int, int]] = {
             Color.GREEN: (pyxel.COLOR_GREEN, pyxel.COLOR_LIME),
             Color.BLUE: (pyxel.COLOR_DARK_BLUE, pyxel.COLOR_LIGHT_BLUE),
-            # Color.YELLOW: (pyxel.COLOR_ORANGE, pyxel.COLOR_YELLOW),
+            Color.YELLOW: (pyxel.COLOR_ORANGE, pyxel.COLOR_YELLOW),
+            Color.RED: (pyxel.COLOR_PINK, pyxel.COLOR_RED),
+            Color.PURPLE: (pyxel.COLOR_BROWN, pyxel.COLOR_PURPLE),
+            Color.ORANGE: (pyxel.COLOR_PEACH, pyxel.COLOR_ORANGE)
         }
     
     @property
@@ -74,13 +77,14 @@ class ZumaView:
         center_y = shooter_y + 8
         angle = atan2((pyxel.mouse_y - center_y), (pyxel.mouse_x - center_x))
         bullet_color = self._color_dictionary[next_bullet_color][1]
+        pointer_outline = self._color_dictionary[next_bullet_color][0]
 
         # draws shooter itself:
         pyxel.blt(shooter_x, shooter_y, 0, 0, 0, 16, 16, pyxel.COLOR_BLACK)
 
         # draws bullet pointer:
         pyxel.circ(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), self._bullet_size, bullet_color)
-        pyxel.circb(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), self._bullet_size, pyxel.COLOR_NAVY)
+        pyxel.circb(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), self._bullet_size, pointer_outline)
 
     def draw_bullet(self, bullet: Bullet):
         pyxel.circ(bullet.coords[0], bullet.coords[1], self._bullet_size, self._color_dictionary[bullet.color][1])
@@ -93,11 +97,22 @@ class ZumaView:
             center_y = shooter_y + 8
             angle = atan2((pyxel.mouse_y - center_y), (pyxel.mouse_x - center_x))
             return (center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), angle)
-    
+    def get_keyboard_info(self) -> Direction | Literal["T"] | None:
+        if pyxel.btn(pyxel.KEY_W):
+            return Direction.UP
+        elif pyxel.btn(pyxel.KEY_A):
+            return Direction.LEFT
+        elif pyxel.btn(pyxel.KEY_S):
+            return Direction.DOWN
+        elif pyxel.btn(pyxel.KEY_D):
+            return Direction.RIGHT
+        elif pyxel.btn(pyxel.KEY_T):
+            return "T"
+
     def draw_enemy(self, enemy: Enemy):
         pyxel.pal(pyxel.COLOR_NAVY, self._color_dictionary[enemy.color][0])
         pyxel.pal(pyxel.COLOR_WHITE, self._color_dictionary[enemy.color][1])
-        pyxel.blt(enemy.curr_node.coords[0] * 16, enemy.curr_node.coords[1] * 16, 0, 0, 32, 16, 16, pyxel.COLOR_BLACK)
+        pyxel.blt(enemy.curr_node.coords[0] * 16, enemy.curr_node.coords[1] * 16, 0, enemy.resources[0], enemy.resources[1], 16, 16, pyxel.COLOR_BLACK)
         pyxel.pal()
     
     def draw_mouse(self):

@@ -18,7 +18,8 @@ class ZumaController:
     def update(self):
         if not (self._model.gamestate == GameState.LOSE or self._model.gamestate == GameState.WIN):
             click_info = self._view.get_shot_info(self._model.shooter)
-            self._model.update(click_info, self._view.delta_time)
+            key_info = self._view.get_keyboard_info()
+            self._model.update(click_info, key_info, self._view.delta_time)
     
     def draw(self):
         if not (self._model.gamestate == GameState.LOSE or self._model.gamestate == GameState.WIN):

@@ -40,7 +40,7 @@ class NormalEnemy:
         return 1
     @property
     def should_use_mechanic(self) -> bool:
-        return self._step_counter == self._max_counter
+        return self._step_counter >= self._max_counter
     @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.NORMAL
@@ -86,7 +86,7 @@ class Regenerator:
         return 1
     @property
     def should_use_mechanic(self) -> bool:
-        return self._step_counter == self._max_counter
+        return self._step_counter >= self._max_counter
     @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.REGENERATOR
@@ -133,7 +133,7 @@ class Chameleon:
         return 1
     @property
     def should_use_mechanic(self) -> bool:
-        return self._step_counter == self._max_counter
+        return self._step_counter >= self._max_counter
     @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.CHAMELEON
