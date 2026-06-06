@@ -1,0 +1,117 @@
+# pyright: strict
+
+from __future__ import annotations
+
+from typing import Protocol
+import pyxel
+import time
+from common_types import *
+from round_manager import *
+
+from math import sin, cos, atan2
+
+class UpdateHandler(Protocol):
+    def update(self): ...
+
+class DrawHandler(Protocol):
+    def draw(self): ...
+
+# type Grid = list[list[Shooter | None]]
+
+class ZumaView:
+    def __init__(self):
+        self._width: int = 240
+        self._height: int = 240
+        self._tile_size: int = 16
+        self._bullet_orbit_radius = 12
+        self._bullet_size = 3
+        self._start_time = time.time()
+        self._delta_time = 0
+
+        # color dictionary for converting sprite colors
+        # from template colors to actual color
+        # {Color : (Dark Color, Light Color)}
+        self._color_dictionary: dict[Color, tuple[int, int]] = {
+            Color.GREEN: (pyxel.COLOR_GREEN, pyxel.COLOR_LIME),
+            Color.BLUE: (pyxel.COLOR_DARK_BLUE, pyxel.COLOR_LIGHT_BLUE),
+            # Color.YELLOW: (pyxel.COLOR_ORANGE, pyxel.COLOR_YELLOW),
+        }
+    
+    @property
+    def delta_time(self) -> float:
+        return self._delta_time
+    
+    def draw_grid(self, grid: Grid):
+        for i in range(len(grid)):
+            for j in range(len(grid[i])):
+                if not(i == len(grid) // 2 and j == len(grid[i]) // 2):
+                    tile = grid[i][j]
+                    if tile is not None:
+                        pyxel.blt(i * 16, j * 16, 0, tile.resources[0], tile.resources[1], 16, 16)
+                    else:
+                        pyxel.blt(i * 16, j * 16, 0, 0, 16, 16, 16)
+                else:
+                    pyxel.blt(i * 16, j * 16, 0, 0, 16, 16, 16)
+    
+    def draw_path(self, path: Graph):
+        for i in path:
+            coords = i.coords
+            pyxel.pal(pyxel.COLOR_GRAY, pyxel.COLOR_WHITE)
+            pyxel.blt(coords[0] * 16, coords[1]  * 16, 0, 0, 16, 16, 16)
+            pyxel.pal()
+    
+    def draw_overlayed_tiles(self, grid: Grid):
+        for i in range(len(grid)):
+            for j in range(len(grid[i])):
+                tile = grid[i][j]
+                if tile is not None and tile.overlay:
+                    pyxel.blt(i * 16, j * 16, 0, tile.resources[0], tile.resources[1], 16, 16, pyxel.COLOR_BLACK)
+
+    def draw_shooter(self, shooter: Shooter, next_bullet_color: Color):
+        shooter_x = shooter.coords[0] * 16
+        shooter_y = shooter.coords[1] * 16
+        center_x = shooter_x + 8
+        center_y = shooter_y + 8
+        angle = atan2((pyxel.mouse_y - center_y), (pyxel.mouse_x - center_x))
+        bullet_color = self._color_dictionary[next_bullet_color][1]
+
+        # draws shooter itself:
+        pyxel.blt(shooter_x, shooter_y, 0, 0, 0, 16, 16, pyxel.COLOR_BLACK)
+
+        # draws bullet pointer:
+        pyxel.circ(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), self._bullet_size, bullet_color)
+        pyxel.circb(center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), self._bullet_size, pyxel.COLOR_NAVY)
+
+    def draw_bullet(self, bullet: Bullet):
+        pyxel.circ(bullet.coords[0], bullet.coords[1], self._bullet_size, self._color_dictionary[bullet.color][1])
+    
+    def get_shot_info(self, shooter: Shooter) -> tuple[float, float, float] | None: # (x, y, angle), returns initial position and angle of a shot bullet
+        if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
+            shooter_x = shooter.coords[0] * 16
+            shooter_y = shooter.coords[1] * 16
+            center_x = shooter_x + 8
+            center_y = shooter_y + 8
+            angle = atan2((pyxel.mouse_y - center_y), (pyxel.mouse_x - center_x))
+            return (center_x + (self._bullet_orbit_radius * cos(angle)), center_y + (self._bullet_orbit_radius * sin(angle)), angle)
+    
+    def draw_enemy(self, enemy: Enemy):
+        pyxel.pal(pyxel.COLOR_NAVY, self._color_dictionary[enemy.color][0])
+        pyxel.pal(pyxel.COLOR_WHITE, self._color_dictionary[enemy.color][1])
+        pyxel.blt(enemy.curr_node.coords[0] * 16, enemy.curr_node.coords[1] * 16, 0, 0, 32, 16, 16, pyxel.COLOR_BLACK)
+        pyxel.pal()
+    
+    def draw_mouse(self):
+        pyxel.circ(pyxel.mouse_x, pyxel.mouse_y, 2, pyxel.COLOR_NAVY)
+
+    def start_game(self, update_handler: UpdateHandler, draw_handler: DrawHandler):
+        pyxel.init(self._width, self._height, fps=30)
+        pyxel.load("../resources.pyxres")
+        pyxel.run(update_handler.update, draw_handler.draw)
+    
+    def reset_screen(self):
+        pyxel.cls(pyxel.COLOR_BLACK)
+
+        # calculates delta time
+        current_time = time.time()
+        self._delta_time = current_time - self._start_time
+        self._start_time = current_time
