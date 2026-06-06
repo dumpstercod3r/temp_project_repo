@@ -46,15 +46,18 @@
                     [13, 10],
                     [14, 10]
                 ]
+            ],
+            "bullet_types": [
+                "NORMAL"
+            ],
+            "tower_types": [
+                "NORMAL"
             ]
         },
         "2":
         {
             "enemy_count" : 25,
             "enemy_types": [
-                "NORMAL"
-            ],
-            "bullet_types": [
                 "NORMAL"
             ],
             "enemy_paths": [
@@ -81,6 +84,12 @@
                     [11, 3],
                     [11, 4]
                 ]
+            ],
+            "bullet_types": [
+                "NORMAL"
+            ],
+            "tower_types": [
+                "NORMAL"
             ]
         }
     }
