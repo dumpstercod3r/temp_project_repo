@@ -7,13 +7,17 @@ from enum import StrEnum
 
 type Coord = tuple[int, int]
 type Graph = list[Node]
+type Mechanic = int | Color
 type Grid = list[list[GridConstruct | None]]
 
 
 class RoundInfo(TypedDict):
+    colors: list[str]
     tunnel_coords: list[list[int]]
     enemy_count: int
     enemy_types: list[str]
+    enemy_max_counter: dict[str, int]
+    enemy_appearance_rate: list[float]
     enemy_paths: list[list[list[int]]]
     bullet_types: list[str]
     tower_types: list[str]
@@ -52,6 +56,9 @@ class Node:
 class Color(StrEnum):
     GREEN = 'GREEN'
     BLUE = 'BLUE'
+    YELLOW = "YELLOW"
+    RED = "RED"
+    PURPLE = "PURPLE"
 
 class Direction(StrEnum):
     UP = 'UP'
@@ -61,6 +68,8 @@ class Direction(StrEnum):
 
 class EnemyType(StrEnum):
     NORMAL = 'NORMAL'
+    REGENERATOR = 'REGENERATOR'
+    CHAMELEON = 'CHAMELEON'
 
 class BulletType(StrEnum):
     NORMAL = 'NORMAL'
@@ -70,9 +79,6 @@ class TowerType(StrEnum):
 
 
 class Enemy(Protocol):
-    @property
-    def base_hp(self) -> int:
-        ...
     @property
     def hp(self) -> int:
         ...
@@ -86,12 +92,23 @@ class Enemy(Protocol):
     def curr_node(self) -> Node:
         ...
     @property
+    def resources(self) -> tuple[int, int]:
+        ...
+    @property
     def coords(self) -> Coord: 
         ...
     @property
     def exp(self) -> int:
         ...
+    @property
+    def should_use_mechanic(self) -> bool:
+        ...
+    @property
+    def enemy_type(self) -> EnemyType:
+        ...
     def move_to_node(self, node: Node):
+        ...
+    def use_mechanic(self, var: Mechanic):
         ...
     def got_shot(self, damage: int):
         ...

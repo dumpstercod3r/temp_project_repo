@@ -10,14 +10,13 @@ from common_types import *
     
 
 class NormalEnemy:
-    def __init__(self, color: Color, node: Node) -> None:
+    def __init__(self, color: Color, node: Node, max_counter: int):
         self._hp = 1
         self._color: Color = color
         self._is_dead: bool = False
         self._curr_node: Node = node
-    @property
-    def base_hp(self) -> int:
-        return 1
+        self._max_counter: int = max_counter
+        self._step_counter: int = 0
     @property
     def hp(self) -> int:
         return self._hp   
@@ -31,27 +30,136 @@ class NormalEnemy:
     def curr_node(self) -> Node:
         return self._curr_node
     @property
+    def resources(self) -> tuple[int, int]:
+        return (0, 32)
+    @property
     def coords(self) -> Coord: 
         return self.curr_node.coords
     @property
     def exp(self) -> int:
         return 1
+    @property
+    def should_use_mechanic(self) -> bool:
+        return self._step_counter == self._max_counter
+    @property
+    def enemy_type(self) -> EnemyType:
+        return EnemyType.NORMAL
+    
     def move_to_node(self, node: Node):
         self._curr_node = node
+        self._step_counter += 1
+    def use_mechanic(self, var: Mechanic):
+        self._step_counter = 0
+        pass
     def got_shot(self, damage: int):
         self._hp = max(0, self._hp-damage)
         self._is_dead = self._hp == 0
 
+class Regenerator:
+    def __init__(self, color: Color, node: Node, max_counter: int):
+        self._hp = 1
+        self._color: Color = color
+        self._is_dead: bool = False
+        self._curr_node: Node = node
+        self._max_counter: int = max_counter
+        self._step_counter: int = 0
+    @property
+    def hp(self) -> int:
+        return self._hp   
+    @property
+    def color(self) -> Color:
+        return self._color    
+    @property
+    def is_dead(self) -> bool:
+        return self._is_dead 
+    @property
+    def curr_node(self) -> Node:
+        return self._curr_node
+    @property
+    def resources(self) -> tuple[int, int]:
+        return (32, 32)
+    @property
+    def coords(self) -> Coord: 
+        return self.curr_node.coords
+    @property
+    def exp(self) -> int:
+        return 1
+    @property
+    def should_use_mechanic(self) -> bool:
+        return self._step_counter == self._max_counter
+    @property
+    def enemy_type(self) -> EnemyType:
+        return EnemyType.REGENERATOR
+    
+    def move_to_node(self, node: Node):
+        self._curr_node = node
+        self._step_counter += 1
+    def use_mechanic(self, var: Mechanic):
+        if isinstance(var, int):
+            self._hp += 1
+        self._step_counter = 0
+    def got_shot(self, damage: int):
+        self._hp = max(0, self._hp-damage)
+        self._is_dead = self._hp == 0
+
+class Chameleon:
+    def __init__(self, color: Color, node: Node, max_counter: int):
+        self._hp = 1
+        self._color: Color = color
+        self._is_dead: bool = False
+        self._curr_node: Node = node
+        self._max_counter: int = max_counter
+        self._step_counter: int = 0
+    @property
+    def hp(self) -> int:
+        return self._hp   
+    @property
+    def color(self) -> Color:
+        return self._color    
+    @property
+    def is_dead(self) -> bool:
+        return self._is_dead 
+    @property
+    def curr_node(self) -> Node:
+        return self._curr_node
+    @property
+    def resources(self) -> tuple[int, int]:
+        return (16, 32)
+    @property
+    def coords(self) -> Coord: 
+        return self.curr_node.coords
+    @property
+    def exp(self) -> int:
+        return 1
+    @property
+    def should_use_mechanic(self) -> bool:
+        return self._step_counter == self._max_counter
+    @property
+    def enemy_type(self) -> EnemyType:
+        return EnemyType.CHAMELEON
+    
+    def move_to_node(self, node: Node):
+        self._curr_node = node
+        self._step_counter += 1
+    def use_mechanic(self, var: Mechanic):
+        if isinstance(var, Color):
+            self._color = var
+        self._step_counter = 0
+    def got_shot(self, damage: int):
+        self._hp = max(0, self._hp-damage)
+        self._is_dead = self._hp == 0
 
 class EnemyManager:
-    ENEMY_FACTORY: ClassVar[dict[EnemyType, Callable[[Color, Node], Enemy]]
+    ENEMY_FACTORY: ClassVar[dict[EnemyType, Callable[[Color, Node, int], Enemy]]
         ] = {
             EnemyType.NORMAL: NormalEnemy,
+            EnemyType.REGENERATOR: Regenerator,
+            EnemyType.CHAMELEON: Chameleon
         }
 
-    def __init__(self, enemy_count: int, enemy_types: list[str], colors: list[Color], rng: Random):
+    def __init__(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: list[float], colors: list[Color], rng: Random):
         self._rng: Random = rng
-        self.prepare_round(enemy_count, enemy_types, colors)
+        self.prepare_round(enemy_count, enemy_types, enemy_max_counters, enemy_rates, colors)
     
     @property
     def active_enemies(self) -> list[Enemy]:
@@ -65,7 +173,8 @@ class EnemyManager:
         return self._enemy_colors[self._rng.randint(0, len(self._enemy_colors)-1)]
     
     def create_enemy(self, start_node: Node) -> Enemy:
-        return self.ENEMY_FACTORY[self._enemy_types[self._rng.randint(0, len(self._enemy_types)-1)]](self.choose_color(), start_node)
+        enemy_type = self._rng.choices(self._enemy_types, self._enemy_rates)[0]
+        return self.ENEMY_FACTORY[EnemyType(enemy_type)](self.choose_color(), start_node, self._enemy_max_counters[enemy_type])
     
     def spawn(self, enemy_paths: list[Graph]):
         for path in enemy_paths:
@@ -112,6 +221,15 @@ class EnemyManager:
             return True
         else:
             return False
+        
+    def use_mechanic(self, enemy: Enemy):
+        match enemy.enemy_type:
+            case EnemyType.NORMAL:
+                enemy.use_mechanic(0)
+            case EnemyType.REGENERATOR:
+                enemy.use_mechanic(1)
+            case EnemyType.CHAMELEON:
+                enemy.use_mechanic(self.choose_color())
     
     def update(self, delta_time: float) -> int:
         # each enemy moves after 2 seconds
@@ -121,15 +239,20 @@ class EnemyManager:
             for i in self._active_enemies:
                 if self.move(i):
                     total_dmg += 1
+                # checks if enemy should use mechanic
+                if i.should_use_mechanic:
+                    self.use_mechanic(i)
             self._elapsed_time_since_last_enemy_move = 0
         self._elapsed_time_since_last_enemy_move += delta_time
         # print([x.color for x in self._active_enemies])
         return total_dmg
     
-    def prepare_round(self, enemy_count: int, enemy_types: list[str], colors: list[Color]):
+    def prepare_round(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: list[float], colors: list[Color]):
         self._enemy_count: int = enemy_count
         self._enemy_count_needed_to_spawn: int = self._enemy_count
-        self._enemy_types: list[EnemyType] = [EnemyType(enemy) for enemy in enemy_types]
+        self._enemy_types: list[str] = enemy_types
+        self._enemy_max_counters: dict[str, int] = enemy_max_counters
+        self._enemy_rates: list[float] = enemy_rates
         self._active_enemies: list[Enemy] = []
         self._enemies_defeated: int = 0
         self._enemy_colors: list[Color] = colors

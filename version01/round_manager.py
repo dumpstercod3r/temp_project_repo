@@ -27,7 +27,7 @@ class RoundManager:
         self._bullet_colors_queue: list[Color] = self._rng.sample(self._colors, k=len(self._colors))
         self._round_state: RoundState = RoundState.PLAYING
         self._map_manager: MapManager = MapManager(self._grid_size, round_info["tunnel_coords"], round_info["enemy_paths"])
-        self._enemy_manager: EnemyManager = EnemyManager(round_info["enemy_count"], round_info["enemy_types"], self._colors, self._rng)
+        self._enemy_manager: EnemyManager = EnemyManager(round_info["enemy_count"], round_info["enemy_types"], round_info["enemy_max_counter"], round_info["enemy_appearance_rate"], self._colors, self._rng)
         self._bullet_manager: BulletManager = BulletManager(self._colors, self._grid_size)
         self._tower_manager: TowerManager = TowerManager()
     
@@ -72,7 +72,7 @@ class RoundManager:
         self._colors = [Color(color) for color in colors_str]
         self._bullet_colors_queue = self._rng.sample(self._colors, k=len(self._colors))
         self._map_manager.prepare_round(round_info["enemy_paths"], round_info["tunnel_coords"])
-        self._enemy_manager.prepare_round(round_info["enemy_count"], round_info["enemy_types"], self._colors)
+        self._enemy_manager.prepare_round(round_info["enemy_count"], round_info["enemy_types"], round_info["enemy_max_counter"], round_info["enemy_appearance_rate"], self._colors)
         self._bullet_manager.prepare_round(self._colors)
         self._tower_manager.prepare_round(exp) # fix buying mechanics
         self._round_state = RoundState.PLAYING
