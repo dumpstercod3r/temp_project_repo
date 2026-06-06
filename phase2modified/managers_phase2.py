@@ -79,6 +79,9 @@ class NormalTower:
     def coords(self) -> Coord:
         return self._coords
     @property
+    def overlay_enemy(self) -> bool:
+        return False
+    @property
     def bullet_type(self) -> BulletType:
         return BulletType.NORMAL
     @property
@@ -110,6 +113,9 @@ class Shooter:
     @property
     def coords(self) -> Coord:
         return self._coords
+    @property
+    def overlay_enemy(self) -> bool:
+        return False
     @property
     def resources(self) -> tuple[int, int]:
         return (0, 0)
