@@ -180,11 +180,11 @@ class EnemyManager:
         for path in enemy_paths:
             start_node = path[0]
 
-            if self._enemy_count_needed_to_spawn > 0:
-                    self._enemy_count_needed_to_spawn -= 1
-                    enemy = self.create_enemy(start_node)
-                    self._active_enemies.append(enemy)
-                    start_node.occupy(enemy)
+            if not start_node.is_occupied and self._enemy_count_needed_to_spawn > 0:
+                self._enemy_count_needed_to_spawn -= 1
+                enemy = self.create_enemy(start_node)
+                self._active_enemies.append(enemy)
+                start_node.occupy(enemy)
     
     def despawn(self, enemy: Enemy):
         enemy.curr_node.vacate()
@@ -275,7 +275,6 @@ class BulletManager:
     
     def screen_edge_collision(self, bullet: Bullet):
         x, y = bullet.coords
-
         if not(0 <= x < self._screen_width) or not(0 <= y < self._screen_height):
             self.despawn_bullet(bullet)
     

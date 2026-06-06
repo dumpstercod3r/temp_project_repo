@@ -2,7 +2,7 @@
     "lives": 3,
     "grid_size": [15, 15],
     "rounds": 2,
-    "enemy_count": 12,
+    "enemy_count": [12, 25],
     "enemy_types": [
         "NORMAL"
     ],
