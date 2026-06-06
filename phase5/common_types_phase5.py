@@ -17,7 +17,7 @@ class RoundInfo(TypedDict):
     enemy_count: int
     enemy_types: list[str]
     enemy_max_counter: dict[str, int]
-    enemy_appearance_rate: dict[str, float]
+    enemy_appearance_rate: list[float]
     enemy_paths: list[list[list[int]]]
     bullet_types: list[str]
     tower_types: list[str]

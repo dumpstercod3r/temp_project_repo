@@ -10,14 +10,13 @@ from common_types_phase5 import *
     
 
 class NormalEnemy:
-    def __init__(self, color: Color, node: Node, max_counter: int, appearance_rate: float):
+    def __init__(self, color: Color, node: Node, max_counter: int):
         self._hp = 1
         self._color: Color = color
         self._is_dead: bool = False
         self._curr_node: Node = node
         self._max_counter: int = max_counter
         self._step_counter: int = 0
-        self._appearance_rate: float = appearance_rate
     @property
     def hp(self) -> int:
         return self._hp   
@@ -39,9 +38,6 @@ class NormalEnemy:
     @property
     def should_use_mechanic(self) -> bool:
         return self._step_counter == self._max_counter
-    @property
-    def appearance_rate(self) -> float:
-        return self.appearance_rate
     @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.NORMAL
@@ -57,14 +53,13 @@ class NormalEnemy:
         self._is_dead = self._hp == 0
 
 class Regenerator:
-    def __init__(self, color: Color, node: Node, max_counter: int, appearance_rate: float):
+    def __init__(self, color: Color, node: Node, max_counter: int):
         self._hp = 1
         self._color: Color = color
         self._is_dead: bool = False
         self._curr_node: Node = node
         self._max_counter: int = max_counter
         self._step_counter: int = 0
-        self._appearance_rate: float = appearance_rate
     @property
     def hp(self) -> int:
         return self._hp   
@@ -86,9 +81,6 @@ class Regenerator:
     @property
     def should_use_mechanic(self) -> bool:
         return self._step_counter == self._max_counter
-    @property
-    def appearance_rate(self) -> float:
-        return self.appearance_rate
     @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.REGENERATOR
@@ -105,14 +97,13 @@ class Regenerator:
         self._is_dead = self._hp == 0
 
 class Chameleon:
-    def __init__(self, color: Color, node: Node, max_counter: int, appearance_rate: float):
+    def __init__(self, color: Color, node: Node, max_counter: int):
         self._hp = 1
         self._color: Color = color
         self._is_dead: bool = False
         self._curr_node: Node = node
         self._max_counter: int = max_counter
         self._step_counter: int = 0
-        self._appearance_rate: float = appearance_rate
     @property
     def hp(self) -> int:
         return self._hp   
@@ -135,9 +126,6 @@ class Chameleon:
     def should_use_mechanic(self) -> bool:
         return self._step_counter == self._max_counter
     @property
-    def appearance_rate(self) -> float:
-        return self.appearance_rate
-    @property
     def enemy_type(self) -> EnemyType:
         return EnemyType.CHAMELEON
     
@@ -153,14 +141,14 @@ class Chameleon:
         self._is_dead = self._hp == 0
 
 class EnemyManager:
-    ENEMY_FACTORY: ClassVar[dict[EnemyType, Callable[[Color, Node, int, float], Enemy]]
+    ENEMY_FACTORY: ClassVar[dict[EnemyType, Callable[[Color, Node, int], Enemy]]
         ] = {
             EnemyType.NORMAL: NormalEnemy,
             EnemyType.REGENERATOR: Regenerator,
             EnemyType.CHAMELEON: Chameleon
         }
 
-    def __init__(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: dict[str, float], colors: list[Color], rng: Random):
+    def __init__(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: list[float], colors: list[Color], rng: Random):
         self._rng: Random = rng
         self.prepare_round(enemy_count, enemy_types, enemy_max_counters, enemy_rates, colors)
     
@@ -176,8 +164,8 @@ class EnemyManager:
         return self._enemy_colors[self._rng.randint(0, len(self._enemy_colors)-1)]
     
     def create_enemy(self, start_node: Node) -> Enemy:
-        enemy_type = self._enemy_types[self._rng.randint(0, len(self._enemy_types)-1)]
-        return self.ENEMY_FACTORY[EnemyType(enemy_type)](self.choose_color(), start_node, self._enemy_max_counters[enemy_type], self._enemy_rates[enemy_type])
+        enemy_type = self._rng.choices(self._enemy_types, self._enemy_rates)[0]
+        return self.ENEMY_FACTORY[EnemyType(enemy_type)](self.choose_color(), start_node, self._enemy_max_counters[enemy_type])
     
     def spawn(self, enemy_paths: list[Graph]):
         for path in enemy_paths:
@@ -250,12 +238,12 @@ class EnemyManager:
         # print([x.color for x in self._active_enemies])
         return total_dmg
     
-    def prepare_round(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: dict[str, float], colors: list[Color]):
+    def prepare_round(self, enemy_count: int, enemy_types: list[str], enemy_max_counters: dict[str, int], enemy_rates: list[float], colors: list[Color]):
         self._enemy_count: int = enemy_count
         self._enemy_count_needed_to_spawn: int = self._enemy_count
         self._enemy_types: list[str] = enemy_types
         self._enemy_max_counters: dict[str, int] = enemy_max_counters
-        self._enemy_rates: dict[str, float] = enemy_rates
+        self._enemy_rates: list[float] = enemy_rates
         self._active_enemies: list[Enemy] = []
         self._enemies_defeated: int = 0
         self._enemy_colors: list[Color] = colors
