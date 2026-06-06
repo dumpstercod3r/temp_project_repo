@@ -12,7 +12,7 @@ class ZumaControllerPhase2:
 
     
     def start_game(self):
-        self._model.prepare_round()
+        self._model.prepare_round(1)
         self._view.start_game(self, self)
     
     def update(self):

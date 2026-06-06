@@ -21,14 +21,15 @@ class ZumaModelPhase2:
     def __init__(self, phase2_info: Phase2Info):
         self._rng: Random = Random(67)
         self._lives: int = phase2_info['lives']
-        self._rounds: int = phase2_info['rounds']
+        self._rounds: dict[str, RoundInfo] = phase2_info['rounds']
+        self._max_rounds: int = len(self._rounds) # set to zero for endless
         self._curr_round: int = 1
         self._colors: list[Color] = [Color(color) for color in phase2_info['colors']]
         self._bullet_colors_queue: list[Color] = self._rng.sample(self._colors, k=len(self._colors))
         self._exp: int = 0
         self._gamestate: GameState = GameState.ROUND_SETUP
-        self._map_manager: MapManager = MapManager(phase2_info['grid_size'], phase2_info['enemy_paths'])
-        self._enemy_manager: EnemyManager = EnemyManager(phase2_info['enemy_count'], phase2_info['enemy_types'], self._colors, self._rng)
+        self._map_manager: MapManager = MapManager(phase2_info['grid_size'], self._rounds[str(self.curr_round)]['enemy_paths'])
+        self._enemy_manager: EnemyManager = EnemyManager(self._rounds[str(self.curr_round)]['enemy_count'], self._rounds[str(self.curr_round)]['enemy_types'], self._colors, self._rng)
         self._bullet_manager: BulletManager = BulletManager(self._colors, [x * 16 for x in phase2_info['grid_size']])
         self._tower_manager: TowerManager = TowerManager()
 
@@ -36,7 +37,7 @@ class ZumaModelPhase2:
     def lives(self) -> int:
         return self._lives
     @property
-    def rounds(self) -> int:
+    def rounds(self) -> dict[str, RoundInfo]:
         return self._rounds
     @property
     def curr_round(self) -> int:
@@ -71,10 +72,10 @@ class ZumaModelPhase2:
     def exp_manager(self, exp_lost: int):
         self._exp -= exp_lost
 
-    def prepare_round(self):
-        if self.curr_round == 1:
-            self._map_manager.prepare_round()
-        self._enemy_manager.prepare_round()
+    def prepare_round(self, round_number: int):
+        r = str(round_number)
+        self._map_manager.prepare_round(self._rounds[r]["enemy_paths"])
+        self._enemy_manager.prepare_round(self._rounds[r]["enemy_count"], self._rounds[r]["enemy_types"])
         self._bullet_manager.prepare_round()
         # self.exp_manager(self._tower_manager.prepare_round(self.exp)) # how to buy towers?
         self._gamestate = GameState.PLAYING
@@ -96,8 +97,9 @@ class ZumaModelPhase2:
     
     def bullet_enemy_collision(self):
         def is_colliding(bullet: Bullet, enemy: Enemy):
-            if ((enemy.coords[0] * 16) - 10 - 3<= bullet.coords[0] <= (enemy.coords[0] * 16) + 10 and 
-            (enemy.coords[1] * 16) - 10 <= bullet.coords[1] <= (enemy.coords[1] * 16) + 10):
+            buffer = 3
+            if ((enemy.coords[0] * 16) - buffer <= bullet.coords[0] <= (enemy.coords[0] * 16) + buffer + 16 and 
+            (enemy.coords[1] * 16) - buffer <= bullet.coords[1] <= (enemy.coords[1] * 16) + buffer + 16):
                 return True
             else:
                 return False
@@ -116,7 +118,7 @@ class ZumaModelPhase2:
             elif self.lives == 0:
                 self._gamestate = GameState.LOSE
         elif self.gamestate == GameState.ROUND_OVER:
-            if self.curr_round == self.rounds:
+            if self.curr_round > self._max_rounds:
                 self._gamestate = GameState.WIN
             else:
                 self._gamestate = GameState.ROUND_SETUP
@@ -125,7 +127,7 @@ class ZumaModelPhase2:
         self._curr_round += 1
         self.update_gamestate()
         if self.gamestate == GameState.ROUND_SETUP:
-            self.prepare_round()
+            self.prepare_round(self._curr_round)
         else:
             self.end_game()
     

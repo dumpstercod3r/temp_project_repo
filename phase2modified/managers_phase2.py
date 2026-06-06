@@ -119,10 +119,7 @@ class MapManager:
     def __init__(self, grid_size: list[int], raw_enemy_paths: list[list[list[int]]]):
         self._grid_size: list[int] = grid_size
         self._shooter: Shooter = Shooter(self._grid_size[0]//2, self._grid_size[1]//2)
-        self._grid: Grid = []
-        self._restricted_tiles: set[Coord] = set()
-        self._raw_enemy_paths: list[list[list[int]]] = raw_enemy_paths
-        self._enemy_paths: list[Graph] = []
+        self.prepare_round(raw_enemy_paths)
 
     @property
     def shooter(self) -> Shooter:
@@ -146,8 +143,9 @@ class MapManager:
         self._grid[r//2][c//2] = self._shooter
         self.update_restricted_tiles((r, c), True)
     
-    def make_paths(self):
+    def make_paths(self, raw_enemy_paths: list[list[list[int]]]):
         self._enemy_paths = []
+        self._raw_enemy_paths = raw_enemy_paths
         
         for enemy_path in self._raw_enemy_paths:
             next_node = None
@@ -173,9 +171,13 @@ class MapManager:
         self._grid[r][c]
         self.update_restricted_tiles(tower.coords, True)
     
-    def prepare_round(self):
+    def prepare_round(self, raw_enemy_paths: list[list[list[int]]]):
+        self._grid: Grid = []
+        self._restricted_tiles: set[Coord] = set()
+        self._raw_enemy_paths: list[list[list[int]]] = raw_enemy_paths
+        self._enemy_paths: list[Graph] = []
         self.make_grid()
-        self.make_paths()
+        self.make_paths(self._raw_enemy_paths)
     
 
 class EnemyManager:
@@ -268,8 +270,10 @@ class EnemyManager:
         # print([x.color for x in self._active_enemies])
         return total_dmg
     
-    def prepare_round(self):
+    def prepare_round(self, enemy_count: int, enemy_types: list[str]):
         self._active_enemies = []
+        self._enemy_types = [EnemyType(enemy) for enemy in enemy_types]
+        self._enemy_count = enemy_count
         self._enemies_defeated = 0
         self._enemy_count_needed_to_spawn = self._enemy_count
         self._all_enemies_defeated = False
@@ -328,6 +332,7 @@ class BulletManager:
     
     def prepare_round(self):
         self._active_bullets = []
+        self._bullet_colors_queue = []
 
 
 class TowerManager:

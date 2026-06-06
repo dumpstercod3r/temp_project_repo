@@ -101,12 +101,6 @@ class ZumaViewPhase2:
         pyxel.load("../resources.pyxres")
         pyxel.run(update_handler.update, draw_handler.draw)
     
-    def continue_round(self) -> bool:
-        if pyxel.btnp(pyxel.KEY_SPACE):
-            return True
-        else:
-            return False
-    
     def reset_screen(self):
         pyxel.cls(pyxel.COLOR_BLACK)
 

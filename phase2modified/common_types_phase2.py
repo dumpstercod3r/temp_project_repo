@@ -8,15 +8,18 @@ from enum import StrEnum#, auto
 type Coord = tuple[int, int]
 type Graph = list[Node]
 type Grid = list[list[GridConstruct | None]]
+
+class RoundInfo(TypedDict):
+    enemy_count: int
+    enemy_types: list[str]
+    bullet_types: list[str]
+    enemy_paths: list[list[list[int]]]
+
 class Phase2Info(TypedDict):
     lives: int
     grid_size: list[int]
-    rounds: int
-    enemy_count: int
-    enemy_types: list[str]
     colors: list[str]
-    enemy_paths: list[list[list[int]]]
-    bullet_types: list[str]
+    rounds: dict[str, RoundInfo]
 
 class Node:
     def __init__(self, x: int, y: int):
